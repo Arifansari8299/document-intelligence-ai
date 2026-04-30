@@ -1,17 +1,12 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from google import genai
-import os
+from sentence_transformers import SentenceTransformer
 
-def get_client():
-    return genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# Initialize the embedding model once
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def embed_texts(texts: list[str]) -> list[list[float]]:
-    client = get_client()
-    result = client.models.embed_content(
-        model="gemini-embedding-001",
-        contents=texts
-    )
-    return [e.values for e in result.embeddings]
+    embeddings = model.encode(texts)
+    return embeddings.tolist()
 
 def embed_query(text: str) -> list[float]:
     return embed_texts([text])[0]

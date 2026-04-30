@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from google import genai
+from groq import Groq
 import os
 from services.embedder import embed_query
 from db.vector_store import search_documents
@@ -12,7 +12,7 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
     query_embedding = embed_query(req.question)
     relevant_chunks = search_documents(query_embedding, n_results=5)
@@ -29,8 +29,14 @@ Question: {req.question}
 
 Answer clearly and concisely:"""
 
-    response = client.models.generate_content(
-        model="gemini-flash-latest",
-        contents=prompt
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
     )
-    return {"answer": response.text, "sources": relevant_chunks[:2]}
+    
+    return {
+        "answer": response.choices[0].message.content, 
+        "sources": relevant_chunks[:2]
+    }

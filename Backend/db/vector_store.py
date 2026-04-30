@@ -1,7 +1,7 @@
 import chromadb
 
 client = chromadb.PersistentClient(path="./chroma_db")
-collection = client.get_or_create_collection("tynor_documents")
+collection = client.get_or_create_collection("tynor_documents_v2")
 
 def add_documents(chunks: list[dict], embeddings: list[list[float]], doc_id: str):
     collection.add(
