@@ -1,12 +1,29 @@
 import { useEffect, useState } from "react";
-import { getDocuments } from "../services/api";
+import { getDocuments, deleteDocument } from "../services/api";
 
-export default function DocumentList() {
+interface Props {
+  refreshKey?: number;
+}
+
+export default function DocumentList({ refreshKey }: Props) {
   const [docs, setDocs] = useState<string[]>([]);
 
-  useEffect(() => {
+  const fetchDocs = () => {
     getDocuments().then(setDocs).catch(() => setDocs([]));
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchDocs();
+  }, [refreshKey]);
+
+  const handleDelete = async (filename: string) => {
+    try {
+      await deleteDocument(filename);
+      setDocs((prev) => prev.filter((d) => d !== filename));
+    } catch {
+      alert("Failed to delete document");
+    }
+  };
 
   if (docs.length === 0) {
     return (
@@ -27,7 +44,14 @@ export default function DocumentList() {
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-xs"
         >
           <span>📄</span>
-          <span className="truncate">{doc}</span>
+          <span className="truncate flex-1">{doc}</span>
+          <button
+            onClick={() => handleDelete(doc)}
+            className="text-red-400 hover:text-red-600 ml-auto shrink-0"
+            title="Delete"
+          >
+            ✕
+          </button>
         </div>
       ))}
     </div>

@@ -16,6 +16,13 @@ async def chat(req: ChatRequest):
 
     query_embedding = embed_query(req.question)
     relevant_chunks = search_documents(query_embedding, n_results=5)
+
+    if not relevant_chunks:
+        return {
+            "answer": "No documents found. Please upload a document first.",
+            "sources": []
+        }
+
     context = "\n\n".join(relevant_chunks)
 
     prompt = f"""You are an intelligent document assistant for Tynor company.
@@ -40,3 +47,5 @@ Answer clearly and concisely:"""
         "answer": response.choices[0].message.content, 
         "sources": relevant_chunks[:2]
     }
+
+# model="llama3-8b-8192",
