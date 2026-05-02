@@ -1,19 +1,20 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from groq import Groq
+import requests
 import os
 from services.embedder import embed_query
 from db.vector_store import search_documents
 
 router = APIRouter()
 
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
+
 class ChatRequest(BaseModel):
     question: str
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
     query_embedding = embed_query(req.question)
     relevant_chunks = search_documents(query_embedding, n_results=5)
 
@@ -36,16 +37,15 @@ Question: {req.question}
 
 Answer clearly and concisely:"""
 
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
-    
+    response = requests.post(OLLAMA_URL, json={
+        "model": OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False
+    })
+    response.raise_for_status()
+    answer = response.json().get("response", "")
+
     return {
-        "answer": response.choices[0].message.content, 
+        "answer": answer,
         "sources": relevant_chunks[:2]
     }
-
-# model="llama3-8b-8192",

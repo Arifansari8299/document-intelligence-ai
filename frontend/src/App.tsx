@@ -25,7 +25,7 @@ export default function App() {
             Ask anything about your documents
           </h1>
           <p className="text-sm text-gray-500">
-            Powered by Gemini 2.5 Flash
+            Powered by Ollama (llama3.2:1b)
           </p>
         </div>
         <ChatWindow />
