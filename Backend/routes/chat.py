@@ -15,14 +15,24 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
+    print(f"\n{'='*60}")
+    print(f"[QUERY] {req.question}")
+    print(f"{'='*60}")
+
     query_embedding = embed_query(req.question)
     relevant_chunks = search_documents(query_embedding, n_results=5)
 
     if not relevant_chunks:
+        print("[DEBUG] No chunks found in vector store.")
         return {
             "answer": "No documents found. Please upload a document first.",
             "sources": []
         }
+
+    print(f"[DEBUG] Total chunks retrieved: {len(relevant_chunks)}")
+    for i, chunk in enumerate(relevant_chunks):
+        print(f"\n--- Chunk {i+1} ---")
+        print(chunk[:300] + ("..." if len(chunk) > 300 else ""))
 
     context = "\n\n".join(relevant_chunks)
 
@@ -44,6 +54,9 @@ Answer clearly and concisely:"""
     })
     response.raise_for_status()
     answer = response.json().get("response", "")
+
+    print(f"\n[LLM ANSWER] {answer[:300]}{'...' if len(answer) > 300 else ''}")
+    print(f"{'='*60}\n")
 
     return {
         "answer": answer,
