@@ -23,3 +23,10 @@ export async function getDocuments(): Promise<string[]> {
   const data = await res.json();
   return data.documents;
 }
+
+export async function deleteDocument(filename: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/documents/${encodeURIComponent(filename)}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Delete failed");
+}
