@@ -37,3 +37,17 @@ def delete_document_by_source(source_name: str):
     ids = results.get("ids", [])
     if ids:
         collection.delete(ids=ids)
+
+def sync_chromadb_with_uploads():
+    """Remove ChromaDB chunks whose source file no longer exists in uploads."""
+    upload_dir = "./uploads"
+    existing_files = set(os.listdir(upload_dir)) if os.path.exists(upload_dir) else set()
+    data = collection.get()
+    ids_to_delete = [
+        data["ids"][i]
+        for i, meta in enumerate(data["metadatas"])
+        if meta and meta.get("source") not in existing_files
+    ]
+    if ids_to_delete:
+        collection.delete(ids=ids_to_delete)
+        print(f"[SYNC] Removed {len(ids_to_delete)} orphan chunks from ChromaDB")
